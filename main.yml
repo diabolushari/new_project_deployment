@@ -98,9 +98,9 @@
       - { key: DB_CONNECTION, value: mysql }
       - { key: DB_HOST, value: 127.0.0.1 }
       - { key: DB_PORT, value: 3306 }
-      - { key: DB_DATABASE, value: kseb }
-      - { key: DB_USERNAME, value: root }
-      - { key: DB_PASSWORD, value: WeLcome@1 }
+      - { key: DB_DATABASE, value: {{ db_name }} }
+      - { key: DB_USERNAME, value: {{ db_user }} }
+      - { key: DB_PASSWORD, value: {{ db_password }} }
       - { key: BROADCAST_DRIVER, value: log }
       - { key: CACHE_DRIVER, value: redis }
       - { key: FILESYSTEM_DISK, value: local }
@@ -115,21 +115,6 @@
 
   - name: NPM install
     command: npm install
-    args:
-      chdir: "{{ app_path }}"
-
-  - name: Generate key
-    command: php artisan key:generate
-    args:
-      chdir: "{{ app_path }}"
-
-  - name: Storage link
-    command: php artisan storage:link
-    args:
-      chdir: "{{ app_path }}"
-
-  - name: Run migrations
-    command: php artisan migrate --force
     args:
       chdir: "{{ app_path }}"
 
@@ -160,3 +145,22 @@
     service:
       name: nginx
       state: restarted
+
+  - name: Install Certbot
+    apt:
+      name:
+        - certbot
+        - python3-certbot-nginx
+      state: present
+
+  - name: Obtain SSL certificate
+    command: certbot --nginx -d {{ domain }} --non-interactive --agree-tos -m {{ email }}
+    args:
+      creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+
+  - name: Setup auto-renewal
+    cron:
+      name: "Certbot renewal"
+      job: "certbot renew --quiet"
+      minute: "0"
+      hour: "2"

@@ -4,8 +4,7 @@ repo_url: https://github.com/swaraj-xocortx/spontaine-demo.git
 db_name: kseb_ansible_test
 db_user: root
 db_password: WeLcome@1
+backup_sql_path: /root/kseb_backup.sql
 
 domain: 1stopkseb.xocortx.com
-server_ip: "YOUR_SERVER_IP_HERE"
 php_version: "8.2"
-backup_sql_path: /root/backup.sql
