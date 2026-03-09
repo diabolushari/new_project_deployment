@@ -1,0 +1,154 @@
+- hosts: laravel
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+  - name: Update server
+    apt:
+      update_cache: yes
+      upgrade: dist
+
+  - name: Install base packages
+    apt:
+      name:
+        - git
+        - curl
+        - unzip
+        - nginx
+        - mysql-server
+        - redis-server
+        - software-properties-common
+        - gnupg
+        - build-essential
+        - zip
+      state: present
+
+  - name: Set mysql root password
+    mysql_user:
+      name: root
+      host: localhost
+      password: "{{ db_password }}"
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+
+  - name: Create database
+    mysql_db:
+      name: "{{ db_name }}"
+      state: present
+      login_user: root
+      login_password: "{{ db_password }}"
+
+  - name: Install NodeJS 22
+    shell: |
+      curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+      apt install -y nodejs
+    args:
+      executable: /bin/bash
+
+  - name: Add PHP repo
+    apt_repository:
+      repo: ppa:ondrej/php
+
+  - name: Install PHP
+    apt:
+      name:
+        - php{{ php_version }}
+        - php{{ php_version }}-fpm
+        - php{{ php_version }}-mysql
+        - php{{ php_version }}-redis
+        - php{{ php_version }}-mbstring
+        - php{{ php_version }}-xml
+        - php{{ php_version }}-curl
+        - php{{ php_version }}-zip
+        - php{{ php_version }}-gd
+        - php{{ php_version }}-intl
+        - php{{ php_version }}-sqlite3
+        - php{{ php_version }}-pgsql
+        - composer
+      state: present
+
+  - name: Clone project
+    git:
+      repo: "{{ repo_url }}"
+      dest: "{{ app_path }}"
+      force: yes
+
+  - name: Copy env
+    copy:
+      src: "{{ app_path }}/.env.example"
+      dest: "{{ app_path }}/.env"
+      remote_src: yes
+
+  - name: Update Laravel env values
+    lineinfile:
+      path: "{{ app_path }}/.env"
+      regexp: "^{{ item.key }}="
+      line: "{{ item.key }}={{ item.value }}"
+      backrefs: no
+    loop:
+      - { key: DB_CONNECTION, value: mysql }
+      - { key: DB_HOST, value: 127.0.0.1 }
+      - { key: DB_PORT, value: 3306 }
+      - { key: DB_DATABASE, value: kseb }
+      - { key: DB_USERNAME, value: root }
+      - { key: DB_PASSWORD, value: WeLcome@1 }
+      - { key: BROADCAST_DRIVER, value: log }
+      - { key: CACHE_DRIVER, value: redis }
+      - { key: FILESYSTEM_DISK, value: local }
+      - { key: QUEUE_CONNECTION, value: redis }
+      - { key: SESSION_DRIVER, value: redis }
+      - { key: SESSION_LIFETIME, value: 120 }
+
+  - name: Composer install
+    command: composer install
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: NPM install
+    command: npm install
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Generate key
+    command: php artisan key:generate
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Storage link
+    command: php artisan storage:link
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Run migrations
+    command: php artisan migrate --force
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Build assets
+    command: npm run build
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Fix storage permission
+    file:
+      path: "{{ app_path }}/storage"
+      owner: www-data
+      group: www-data
+      recurse: yes
+
+  - name: Copy nginx config
+    template:
+      src: templates/nginx.conf.j2
+      dest: /etc/nginx/sites-available/kseb-analytics
+
+  - name: Enable nginx
+    file:
+      src: /etc/nginx/sites-available/kseb-analytics
+      dest: /etc/nginx/sites-enabled/kseb-analytics
+      state: link
+
+  - name: Restart nginx
+    service:
+      name: nginx
+      state: restarted

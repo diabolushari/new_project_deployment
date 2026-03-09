@@ -1,0 +1,9 @@
+app_path: /var/www/html/kseb-analytics
+repo_url: https://github.com/swaraj-xocortx/spontaine-demo.git
+
+db_name: kseb
+db_user: root
+db_password: WeLcome@1
+
+domain: 1stopkseb.xocortx.com
+php_version: "8.2"
