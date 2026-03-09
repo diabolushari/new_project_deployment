@@ -34,8 +34,11 @@
       executable: /bin/bash
 
   - name: Add PHP repo
-    apt_repository:
-      repo: ppa:ondrej/php
+    shell: |
+      add-apt-repository -y ppa:ondrej/php
+      apt update
+    args:
+      executable: /bin/bash
 
   - name: Install PHP
     apt:
