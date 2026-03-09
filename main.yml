@@ -98,9 +98,9 @@
       - { key: DB_CONNECTION, value: mysql }
       - { key: DB_HOST, value: 127.0.0.1 }
       - { key: DB_PORT, value: 3306 }
-      - { key: DB_DATABASE, value: {{ db_name }} }
-      - { key: DB_USERNAME, value: {{ db_user }} }
-      - { key: DB_PASSWORD, value: {{ db_password }} }
+      - { key: DB_DATABASE, value: "{{ db_name }}" }
+      - { key: DB_USERNAME, value: "{{ db_user }}" }
+      - { key: DB_PASSWORD, value: "{{ db_password }}" }
       - { key: BROADCAST_DRIVER, value: log }
       - { key: CACHE_DRIVER, value: redis }
       - { key: FILESYSTEM_DISK, value: local }
