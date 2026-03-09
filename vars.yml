@@ -1,10 +1,11 @@
-app_path: /var/www/html/kseb_ansible_test
+clone_path: /var/www/html/kseb_ansible_test
+app_path: /var/www/html/kseb_ansible_test/spontaine-demo
 repo_url: git@github.com:swaraj-xocortx/spontaine-demo.git
 
 db_name: kseb_ansible_test
 db_user: root
 db_password: WeLcome@1
-backup_sql_path: /root/kseb_backup.sql
+backup_sql_path: /root/kseb.sql
 
 domain: 1stopkseb.xocortx.com
 php_version: "8.2"

@@ -80,8 +80,10 @@
   - name: Clone project
     git:
       repo: "{{ repo_url }}"
-      dest: "{{ app_path }}"
+      dest: "{{ clone_path }}"
       force: yes
+      depth: 1
+      version: main
 
   - name: Copy env
     copy:
