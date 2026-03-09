@@ -2,8 +2,6 @@
   become: yes
   vars_files:
     - vars.yml
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
 
   tasks:
 
@@ -27,11 +25,6 @@
         - zip
         - python3-pymysql
       state: present
-
-  - name: Ensure PyMySQL is installed
-    pip:
-      name: PyMySQL
-      executable: pip3
 
   - name: Install NodeJS 22
     shell: |
