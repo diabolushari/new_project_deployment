@@ -59,26 +59,23 @@
       state: present
 
   - name: Set mysql root password
-    mysql_user:
-      name: root
-      host: localhost
-      password: "{{ db_password }}"
-      login_unix_socket: /var/run/mysqld/mysqld.sock
+    shell: |
+      mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ db_password }}';" || true
+    args:
+      executable: /bin/bash
 
   - name: Create database
-    mysql_db:
-      name: "{{ db_name }}"
-      state: present
-      login_user: root
-      login_password: "{{ db_password }}"
+    shell: |
+      mysql -u root -p'{{ db_password }}' -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+    args:
+      executable: /bin/bash
 
   - name: Import SQL backup
-    mysql_db:
-      name: "{{ db_name }}"
-      state: import
-      target: "{{ backup_sql_path }}"
-      login_user: root
-      login_password: "{{ db_password }}"
+    shell: |
+      mysql -u root -p'{{ db_password }}' {{ db_name }} < {{ backup_sql_path }}
+    args:
+      executable: /bin/bash
+
 
   - name: Clone project
     git:
