@@ -39,6 +39,14 @@
       login_user: root
       login_password: "{{ db_password }}"
 
+  - name: Import SQL backup
+    mysql_db:
+      name: "{{ db_name }}"
+      state: import
+      target: "{{ backup_sql_path }}"
+      login_user: root
+      login_password: "{{ db_password }}"
+
   - name: Install NodeJS 22
     shell: |
       curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
