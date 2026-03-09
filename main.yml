@@ -80,7 +80,7 @@
   - name: Clone project
     git:
       repo: "{{ repo_url }}"
-      dest: "{{ clone_path }}"
+      dest: "{{ app_path }}"
       force: yes
       depth: 1
       version: main
@@ -136,12 +136,12 @@
   - name: Copy nginx config
     template:
       src: templates/nginx.conf.j2
-      dest: /etc/nginx/sites-available/kseb-analytics
+      dest: /etc/nginx/sites-available/"{{ nginx_site_name }}"
 
   - name: Enable nginx
     file:
-      src: /etc/nginx/sites-available/kseb-analytics
-      dest: /etc/nginx/sites-enabled/kseb-analytics
+      src: /etc/nginx/sites-available/"{{ nginx_site_name }}"
+      dest: /etc/nginx/sites-enabled/"{{ nginx_site_name }}"
       state: link
 
   - name: Restart nginx

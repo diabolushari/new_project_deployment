@@ -1,5 +1,4 @@
-clone_path: /var/www/html/kseb_ansible_test
-app_path: /var/www/html/kseb_ansible_test/spontaine-demo
+app_path: /var/www/html/kseb_ansible_test
 repo_url: git@github.com:swaraj-xocortx/spontaine-demo.git
 
 db_name: kseb_ansible_test
