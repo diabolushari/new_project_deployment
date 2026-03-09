@@ -23,29 +23,8 @@
         - gnupg
         - build-essential
         - zip
+        - python3-pymysql
       state: present
-
-  - name: Set mysql root password
-    mysql_user:
-      name: root
-      host: localhost
-      password: "{{ db_password }}"
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-
-  - name: Create database
-    mysql_db:
-      name: "{{ db_name }}"
-      state: present
-      login_user: root
-      login_password: "{{ db_password }}"
-
-  - name: Import SQL backup
-    mysql_db:
-      name: "{{ db_name }}"
-      state: import
-      target: "{{ backup_sql_path }}"
-      login_user: root
-      login_password: "{{ db_password }}"
 
   - name: Install NodeJS 22
     shell: |
@@ -75,6 +54,28 @@
         - php{{ php_version }}-pgsql
         - composer
       state: present
+
+  - name: Set mysql root password
+    mysql_user:
+      name: root
+      host: localhost
+      password: "{{ db_password }}"
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+
+  - name: Create database
+    mysql_db:
+      name: "{{ db_name }}"
+      state: present
+      login_user: root
+      login_password: "{{ db_password }}"
+
+  - name: Import SQL backup
+    mysql_db:
+      name: "{{ db_name }}"
+      state: import
+      target: "{{ backup_sql_path }}"
+      login_user: root
+      login_password: "{{ db_password }}"
 
   - name: Clone project
     git:
