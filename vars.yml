@@ -8,4 +8,5 @@ db_password: WeLcome@1
 backup_sql_path: /root/kseb.sql
 
 domain: 1stopkseb.xocortx.com
+nginx_site_name: kseb_ansible_test
 php_version: "8.2"
