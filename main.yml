@@ -32,13 +32,13 @@
       apt install -y nodejs
     args:
       executable: /bin/bash
+      creates: /usr/bin/node
 
   - name: Add PHP repository
-    shell: |
-      add-apt-repository -y ppa:ondrej/php
-      apt update
-    args:
-      executable: /bin/bash
+    apt_repository:
+      repo: ppa:ondrej/php
+      state: present
+      update_cache: yes
 
   - name: Install PHP and extensions
     apt:
@@ -75,6 +75,7 @@
       mysql -u root -p'{{ db_password }}' {{ db_name }} < {{ backup_sql_path }}
     args:
       executable: /bin/bash
+    when: backup_sql_path is defined
 
   - name: Clone Laravel project
     git:
@@ -106,20 +107,31 @@
       - { key: QUEUE_CONNECTION, value: redis }
       - { key: SESSION_DRIVER, value: redis }
 
+  - name: Install Composer globally
+    shell: |
+      curl -sS https://getcomposer.org/installer -o composer-setup.php
+      php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+      rm composer-setup.php
+    args:
+      executable: /bin/bash
+      creates: /usr/local/bin/composer
+
   - name: Install PHP dependencies
-    command: /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader
+    command: composer install --no-interaction --prefer-dist --optimize-autoloader
     args:
       chdir: "{{ app_path }}"
+      creates: "{{ app_path }}/vendor"
 
   - name: Generate Laravel key
     command: php artisan key:generate
     args:
-      chdir: "{{ app_path }}"
+      chdir: "{{ app_path }}"  
 
   - name: Install NPM dependencies
     command: npm install
     args:
       chdir: "{{ app_path }}"
+      creates: "{{ app_path }}/node_modules"
 
   - name: Build frontend assets
     command: npm run build
@@ -131,6 +143,7 @@
       path: "{{ item }}"
       owner: www-data
       group: www-data
+      mode: "775"
       recurse: yes
     loop:
       - "{{ app_path }}/storage"
