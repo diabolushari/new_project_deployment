@@ -85,6 +85,17 @@
       force: yes
       depth: 1
 
+  - name: Remove existing storage directory
+    file:
+      path: "{{ app_path }}/storage"
+      state: absent
+
+  - name: Copy storage directory from backup
+    copy:
+      src: /root/storage
+      dest: "{{ app_path }}/"
+      remote_src: yes 
+
   - name: Copy .env file
     copy:
       src: "{{ app_path }}/.env.example"
