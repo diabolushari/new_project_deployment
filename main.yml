@@ -5,7 +5,7 @@
 
   tasks:
 
-  - name: Update server
+  - name: Update server packages
     apt:
       update_cache: yes
       upgrade: dist
@@ -33,14 +33,14 @@
     args:
       executable: /bin/bash
 
-  - name: Add PHP repo
+  - name: Add PHP repository
     shell: |
       add-apt-repository -y ppa:ondrej/php
       apt update
     args:
       executable: /bin/bash
 
-  - name: Install PHP
+  - name: Install PHP and extensions
     apt:
       name:
         - php{{ php_version }}
@@ -58,7 +58,7 @@
         - composer
       state: present
 
-  - name: Set mysql root password
+  - name: Set MySQL root password
     shell: |
       mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ db_password }}';" || true
     args:
@@ -76,27 +76,25 @@
     args:
       executable: /bin/bash
 
-
-  - name: Clone project
+  - name: Clone Laravel project
     git:
       repo: "{{ repo_url }}"
       dest: "{{ app_path }}"
+      version: main
       force: yes
       depth: 1
-      version: main
 
-  - name: Copy env
+  - name: Copy .env file
     copy:
       src: "{{ app_path }}/.env.example"
       dest: "{{ app_path }}/.env"
       remote_src: yes
 
-  - name: Update Laravel env values
+  - name: Configure Laravel environment
     lineinfile:
       path: "{{ app_path }}/.env"
       regexp: "^{{ item.key }}="
       line: "{{ item.key }}={{ item.value }}"
-      backrefs: no
     loop:
       - { key: DB_CONNECTION, value: mysql }
       - { key: DB_HOST, value: 127.0.0.1 }
@@ -104,50 +102,52 @@
       - { key: DB_DATABASE, value: "{{ db_name }}" }
       - { key: DB_USERNAME, value: "{{ db_user }}" }
       - { key: DB_PASSWORD, value: "{{ db_password }}" }
-      - { key: BROADCAST_DRIVER, value: log }
       - { key: CACHE_DRIVER, value: redis }
-      - { key: FILESYSTEM_DISK, value: local }
       - { key: QUEUE_CONNECTION, value: redis }
       - { key: SESSION_DRIVER, value: redis }
-      - { key: SESSION_LIFETIME, value: 120 }
 
-  - name: Composer install
-    command: composer install
+  - name: Install PHP dependencies
+    command: /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader
     args:
       chdir: "{{ app_path }}"
 
-  - name: NPM install
+  - name: Generate Laravel key
+    command: php artisan key:generate
+    args:
+      chdir: "{{ app_path }}"
+
+  - name: Install NPM dependencies
     command: npm install
     args:
       chdir: "{{ app_path }}"
 
-  - name: Build assets
+  - name: Build frontend assets
     command: npm run build
     args:
       chdir: "{{ app_path }}"
 
-  - name: Fix storage permission
+  - name: Set correct permissions
     file:
-      path: "{{ app_path }}/storage"
+      path: "{{ item }}"
       owner: www-data
       group: www-data
       recurse: yes
+    loop:
+      - "{{ app_path }}/storage"
+      - "{{ app_path }}/bootstrap/cache"
 
-  - name: Copy nginx config
+  - name: Configure Nginx
     template:
       src: templates/nginx.conf.j2
-      dest: /etc/nginx/sites-available/"{{ nginx_site_name }}"
+      dest: /etc/nginx/sites-available/{{ nginx_site_name }}
+    notify: Restart nginx
 
-  - name: Enable nginx
+  - name: Enable Nginx site
     file:
-      src: /etc/nginx/sites-available/"{{ nginx_site_name }}"
-      dest: /etc/nginx/sites-enabled/"{{ nginx_site_name }}"
+      src: /etc/nginx/sites-available/{{ nginx_site_name }}
+      dest: /etc/nginx/sites-enabled/{{ nginx_site_name }}
       state: link
-
-  - name: Restart nginx
-    service:
-      name: nginx
-      state: restarted
+    notify: Restart nginx
 
   - name: Install Certbot
     apt:
@@ -161,9 +161,16 @@
     args:
       creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
 
-  - name: Setup auto-renewal
+  - name: Setup SSL auto-renew
     cron:
-      name: "Certbot renewal"
+      name: Certbot Renewal
       job: "certbot renew --quiet"
       minute: "0"
       hour: "2"
+
+  handlers:
+
+  - name: Restart nginx
+    service:
+      name: nginx
+      state: restarted
