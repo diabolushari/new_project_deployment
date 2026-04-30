@@ -79,12 +79,10 @@
 
   - name: Clone Laravel project
     git:
-      repo: "{{ repo_url }}"
-      dest: "{{ app_path }}"
+      repo: git@github.com:swaraj-xocortx/spontaine-demo.git
+      dest: /var/www/html/spontaine-demo
       version: main
-      force: yes
-      depth: 1
-      accept_hostkey: yes
+    become: false
 
   - name: Remove existing storage directory
     file:
