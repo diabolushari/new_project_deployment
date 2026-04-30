@@ -84,6 +84,7 @@
       version: main
       force: yes
       depth: 1
+      accept_hostkey: yes
 
   - name: Remove existing storage directory
     file:
