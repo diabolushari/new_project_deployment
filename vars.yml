@@ -1,12 +1,12 @@
-app_path: /var/www/html/kseb_ansible_test
+app_path: /var/www/html/spontaine-demo
 repo_url: git@github.com:swaraj-xocortx/spontaine-demo.git
 
-db_name: kseb_ansible_test
+db_name: spontaine_demo
 db_user: root
 db_password: WeLcome@1
-backup_sql_path: /root/kseb.sql
+backup_sql_path: /root/spontaine-demo.sql
 
-domain: demo.spontaine.com
-nginx_site_name: kseb_ansible_test
-php_version: "8.2"
+domain: newtone-pilot.spontaine.com
+nginx_site_name: spontaine-demo
+php_version: "8.4"
 email: swaraj@xocortx.com
